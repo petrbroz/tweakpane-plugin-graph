@@ -1,0 +1,14 @@
+.github/
+.vscode/
+node_modules/
+scripts/
+src/
+test/
+.editorconfig
+.eslintignore
+.eslintrc.js
+.gitignore
+.prettierrc.json
+preview.png
+README.md
+rollup.config.js
