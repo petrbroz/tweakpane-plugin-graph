@@ -1,6 +1,6 @@
 {
   "name": "tweakpane-plugin-graph",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Graph plugin for Tweakpane",
   "main": "dist/tweakpane-plugin-graph.js",
   "type": "module",
