@@ -1,11 +1,11 @@
 {
-  "name": "tweakpane-plugin-template",
+  "name": "tweakpane-plugin-graph",
   "version": "0.0.0",
-  "description": "Plugin template for Tweakpane",
-  "main": "dist/tweakpane-plugin-template.js",
+  "description": "Graph plugin for Tweakpane",
+  "main": "dist/tweakpane-plugin-graph.js",
   "type": "module",
   "types": "dist/types/index.d.ts",
-  "author": "cocopon",
+  "author": "Petr Broz <petr.broz@autodesk.com>",
   "license": "MIT",
   "files": [
     "dist"

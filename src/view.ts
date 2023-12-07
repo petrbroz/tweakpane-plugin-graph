@@ -1,80 +1,97 @@
-import {ClassName, mapRange, Value, View, ViewProps} from '@tweakpane/core';
+import { BufferedValue, ClassName, Formatter, View, ViewProps } from '@tweakpane/core';
 
 interface Config {
-	value: Value<number>;
+	value: BufferedValue<number>;
 	viewProps: ViewProps;
+	formatter: Formatter<number>;
 }
 
-// Create a class name generator from the view name
-// ClassName('tmp') will generate a CSS class name like `tp-tmpv`
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_WIDTH = 160;
+const SVG_HEIGHT = 60;
+
 const className = ClassName('tmp');
 
-// Custom view class should implement `View` interface
-export class PluginView implements View {
+export class GraphView implements View {
+	public readonly value: BufferedValue<number>;
+	public readonly formatter: Formatter<number>;
 	public readonly element: HTMLElement;
-	private value_: Value<number>;
-	private dotElems_: HTMLElement[] = [];
-	private textElem_: HTMLElement;
+	public readonly svg: SVGSVGElement;
+	public readonly polyline: SVGPolylineElement;
+	public readonly min: SVGTextElement;
+	public readonly max: SVGTextElement;
+	public readonly last: SVGTextElement;
 
-	constructor(doc: Document, config: Config) {
-		// Create a root element for the plugin
+	constructor(doc: Document, { value, viewProps, formatter }: Config) {
+		this.formatter = formatter;
+		this.value = value;
+		this.value.emitter.on('change', this.onValueChange.bind(this));
+
 		this.element = doc.createElement('div');
 		this.element.classList.add(className());
-		// Bind view props to the element
-		config.viewProps.bindClassModifiers(this.element);
+		this.element.style.width = `${SVG_WIDTH}px`;
+		this.element.style.height = `${SVG_HEIGHT}px`;
+		viewProps.bindClassModifiers(this.element);
 
-		// Receive the bound value from the controller
-		this.value_ = config.value;
-		// Handle 'change' event of the value
-		this.value_.emitter.on('change', this.onValueChange_.bind(this));
+		this.svg = doc.createElementNS(SVG_NS, 'svg');
+		this.svg.style.width = `${SVG_WIDTH}px`;
+		this.svg.style.height = `${SVG_HEIGHT}px`;
+		this.element.appendChild(this.svg);
 
-		// Create child elements
-		this.textElem_ = doc.createElement('div');
-		this.textElem_.classList.add(className('text'));
-		this.element.appendChild(this.textElem_);
+		this.polyline = doc.createElementNS(SVG_NS, 'polyline');
+		this.polyline.setAttributeNS(null, 'fill', 'none');
+		this.polyline.setAttributeNS(null, 'stroke', 'gray');
+		this.svg.appendChild(this.polyline);
 
-		// Apply the initial value
-		this.refresh_();
+		this.min = doc.createElementNS(SVG_NS, 'text');
+		this.min.setAttributeNS(null, 'x', '0');
+		this.min.setAttributeNS(null, 'y', SVG_HEIGHT.toString());
+		this.min.setAttributeNS(null, 'text-anchor', 'start');
+		this.min.setAttributeNS(null, 'fill', 'lightgray');
+		this.svg.appendChild(this.min);
+		this.max = doc.createElementNS(SVG_NS, 'text');
+		this.max.setAttributeNS(null, 'x', '0');
+		this.max.setAttributeNS(null, 'y', '10');
+		this.max.setAttributeNS(null, 'text-anchor', 'start');
+		this.max.setAttributeNS(null, 'fill', 'lightgray');
+		this.svg.appendChild(this.max);
+		this.last = doc.createElementNS(SVG_NS, 'text');
+		this.last.setAttributeNS(null, 'x', '160');
+		this.last.setAttributeNS(null, 'y', '35');
+		this.last.setAttributeNS(null, 'text-anchor', 'end');
+		this.last.setAttributeNS(null, 'fill', 'lightgray');
+		this.svg.appendChild(this.last);
 
-		config.viewProps.handleDispose(() => {
-			// Called when the view is disposing
-			console.log('TODO: dispose view');
-		});
+		this.refresh();
+		viewProps.handleDispose(() => { /* TODO */ });
 	}
 
-	private refresh_(): void {
-		const rawValue = this.value_.rawValue;
-
-		this.textElem_.textContent = rawValue.toFixed(2);
-
-		while (this.dotElems_.length > 0) {
-			const elem = this.dotElems_.shift();
-			if (elem) {
-				this.element.removeChild(elem);
+	private refresh(): void {
+		const values = this.value.rawValue;
+		const bufferSize = values.length;
+		const points: string[] = [];
+		let min = 0, max = 0, last = 0;
+		for (let i = 0; i < bufferSize; i++) {
+			const val = values[i];
+			if (typeof val !== 'undefined') {
+				min = Math.min(min, val);
+				max = Math.max(max, val);
 			}
 		}
-
-		const doc = this.element.ownerDocument;
-		const dotCount = Math.floor(rawValue);
-		for (let i = 0; i < dotCount; i++) {
-			const dotElem = doc.createElement('div');
-			dotElem.classList.add(className('dot'));
-
-			if (i === dotCount - 1) {
-				const fracElem = doc.createElement('div');
-				fracElem.classList.add(className('frac'));
-				const frac = rawValue - Math.floor(rawValue);
-				fracElem.style.width = `${frac * 100}%`;
-				fracElem.style.opacity = String(mapRange(frac, 0, 1, 1, 0.2));
-				dotElem.appendChild(fracElem);
+		for (let i = 0; i < bufferSize; i++) {
+			const val = values[i];
+			if (typeof val !== 'undefined') {
+				points.push(`${Math.floor(SVG_WIDTH * i / bufferSize)},${Math.floor(SVG_HEIGHT * (1.0 - (val - min) / (max - min)))}`);
+				last = val;
 			}
-
-			this.dotElems_.push(dotElem);
-			this.element.appendChild(dotElem);
 		}
+		this.polyline.setAttributeNS(null, 'points', points.join(' '));
+		this.min.innerHTML = this.formatter(min);
+		this.max.innerHTML = this.formatter(max);
+		this.last.innerHTML = this.formatter(last);
 	}
 
-	private onValueChange_() {
-		this.refresh_();
+	private onValueChange() {
+		this.refresh();
 	}
 }
