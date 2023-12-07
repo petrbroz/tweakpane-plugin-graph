@@ -1,5 +1,3 @@
-/* eslint-env node */
-
 import Alias from '@rollup/plugin-alias';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import Replace from '@rollup/plugin-replace';

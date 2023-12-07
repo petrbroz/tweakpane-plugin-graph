@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-env node */
-
 import Fs from 'fs';
 import Glob from 'glob';
 import Path from 'path';
