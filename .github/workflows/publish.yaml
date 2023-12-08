@@ -23,7 +23,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
-          target-folder: ${{ github.ref }}
+          target-folder: ${{ github.ref_name }}
       - name: Publish to NPM
         run: npm publish
         env:
