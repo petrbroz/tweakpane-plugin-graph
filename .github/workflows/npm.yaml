@@ -1,4 +1,4 @@
-name: publish
+name: Publish to NPM
 
 on:
   push:
@@ -17,14 +17,11 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org/'
           node-version: 20
-      - name: Install & Build
-        run: npm install
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist
-          target-folder: ${{ github.ref_name }}
-      - name: Publish to NPM
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build:prod
+      - name: Publish
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
