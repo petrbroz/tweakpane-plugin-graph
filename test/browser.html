@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+
+<body>
+	<script type="module">
+		import { Pane } from '../node_modules/tweakpane/dist/tweakpane.min.js';
+		import * as TweakpaneGraphPlugin from '../dist/tweakpane-plugin-graph.js';
+
+		const params = {
+			t: 0.0,
+			val: 0.0,
+		};
+		setInterval(() => {
+			params.t += 0.1;
+			params.val = Math.sin(params.t);
+		}, 100);
+
+		const pane = new Pane();
+		pane.registerPlugin(TweakpaneGraphPlugin);
+		pane.addBinding(params, 'val', { view: 'graph2', readonly: true });
+		window.pane = pane;
+	</script>
+</body>
+
+</html>

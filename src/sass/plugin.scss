@@ -1,0 +1,9 @@
+// Import core styles
+@use '../../node_modules/@tweakpane/core/lib/sass/tp';
+
+// Additional style for the plugin
+.#{tp.$prefix}-tmpv {
+	// Extend a general input view style
+	@extend %tp-input;
+	cursor: pointer;
+}
